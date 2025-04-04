@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        input { display: block; margin: 10px auto; padding: 8px; width: 250px; }
+        button { padding: 10px 15px; cursor: pointer; }
+        #error-message { color: red; }
+    </style>
+</head>
+<body>
+
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="uucms_id">UUCMS ID:</label>
+        <input type="text" id="uucms_id" placeholder="Enter UUCMS ID" required>
+        <span id="error-message"></span> 
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
