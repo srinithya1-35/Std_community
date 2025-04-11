@@ -24,7 +24,7 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
         if (data.token) {
             localStorage.setItem("token", data.token);
             alert("Login successful!");
-            window.location.href = "dashboard.html";
+            window.location.href = "dashboard.html";    
         } else {
             errorMessage.textContent = "Invalid UUCMS ID or password";
         }
