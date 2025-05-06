@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [uucmsId, setUucmsId] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -11,10 +11,11 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Dummy login check
+    // Dummy credentials check
     if (uucmsId === 'U18EZ22S001' && password === '1234') {
       setErrorMessage('');
-      navigate('/dashboard'); // Navigate to dashboard
+      onLogin(); // Let App.js know login was successful
+      navigate('/dashboard');
     } else {
       setErrorMessage('Invalid UUCMS ID or Password');
       setUucmsId('');
