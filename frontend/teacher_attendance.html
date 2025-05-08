@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher Attendance</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    label { display: block; margin-bottom: 5px; }
+    select, input[type="date"], button {
+      margin: 10px 0;
+      padding: 5px;
+      font-size: 14px;
+    }
+    .student-card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .student-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .attendance-options label {
+      display: inline-block;
+      margin-right: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mark Attendance</h2>
+  <form id="attendanceForm">
+    <label>Date: <input type="date" name="date" required /></label>
+    <label>Subject:
+      <select name="subjects_id" id="subjectSelect" required></select>
+    </label>
+    <div id="studentList"></div>
+    <button type="submit">Submit Attendance</button>
+  </form>
+
+  <script>
+    async function fetchData() {
+      const [studentsRes, subjectsRes] = await Promise.all([
+        fetch("http://localhost:5000/students"),
+        fetch("http://localhost:5000/subjects")
+      ]);
+
+      const students = await studentsRes.json();
+      const subjects = await subjectsRes.json();
+
+      // Populate subject dropdown
+      const subjectSelect = document.getElementById("subjectSelect");
+      subjects.forEach(sub => {
+        subjectSelect.innerHTML += `<option value="${sub.subjects_id}">${sub.subjects_name}</option>`;
+      });
+
+      // List students with radio buttons
+      const studentList = document.getElementById("studentList");
+      students.forEach(st => {
+        studentList.innerHTML += `
+          <div class="student-card">
+            <div class="student-name">${st.name} (${st.uucms_id})</div>
+            <div class="attendance-options">
+              <label>
+                <input type="radio" name="status-${st.student_id}" value="Present" required> Present
+              </label>
+              <label>
+                <input type="radio" name="status-${st.student_id}" value="Absent"> Absent
+              </label>
+            </div>
+          </div>
+        `;
+      });
+
+      window.students = students;
+    }
+
+    document.getElementById("attendanceForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const date = this.date.value;
+      const subjects_id = this.subjects_id.value;
+
+      const attendanceData = window.students.map(s => ({
+        student_id: s.student_id,
+        status: this[`status-${s.student_id}`].value
+      }));
+
+      const res = await fetch("http://localhost:5000/attendance/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, subjects_id, attendanceData })
+      });
+
+      const result = await res.json();
+      alert(result.message);
+    });
+
+    fetchData();
+  </script>
+</body>
+</html>
