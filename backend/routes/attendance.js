@@ -2,20 +2,57 @@ const express = require('express');
 const db = require('../config/db');
 const router = express.Router();
 
-// GET attendance summary for a student
-router.get('/summary/:student_id', (req, res) => {
-  const student_id = req.params.student_id;
+// GET attendance analysis for all subjects and students
+router.get('/analysis/all', (req, res) => {
   const sql = `
-    SELECT s.subjects_name,
-           COUNT(*) AS total_days,
-           SUM(a.status = 'Present') AS present_days
-    FROM attendance a
-    JOIN subjects s ON a.subjects_id = s.subjects_id
-    WHERE a.student_id = ?
-    GROUP BY a.subjects_id
+    SELECT 
+      st.student_id,
+      st.name,
+      st.uucms_id,
+      sb.subjects_name,
+      COUNT(a.attendance_id) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS present_count
+    FROM Attendance a
+    JOIN Student st ON a.student_id = st.student_id
+    JOIN Subjects sb ON a.subjects_id = sb.subjects_id
+    GROUP BY st.student_id, sb.subjects_id
+    ORDER BY sb.subjects_name, st.name
   `;
-  db.query(sql, [student_id], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching attendance analysis:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+    res.json(results);
+  });
+});
+
+// GET attendance analysis for a specific student
+router.get('/analysis/student/:student_id', (req, res) => {
+  const studentId = req.params.student_id;
+
+  const sql = `
+    SELECT 
+      st.student_id,
+      st.name,
+      st.uucms_id,
+      sb.subjects_name,
+      COUNT(a.attendance_id) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS present_count
+    FROM Attendance a
+    JOIN Student st ON a.student_id = st.student_id
+    JOIN Subjects sb ON a.subjects_id = sb.subjects_id
+    WHERE st.student_id = ?
+    GROUP BY sb.subjects_id
+    ORDER BY sb.subjects_name
+  `;
+
+  db.query(sql, [studentId], (err, results) => {
+    if (err) {
+      console.error("Error fetching attendance:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
     res.json(results);
   });
 });
@@ -29,7 +66,7 @@ router.post('/submit', async (req, res) => {
   }
 
   const insertSQL = `
-    INSERT INTO attendance (student_id, subjects_id, date, status)
+    INSERT INTO Attendance (student_id, subjects_id, date, status)
     VALUES (?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE status = VALUES(status)
   `;
